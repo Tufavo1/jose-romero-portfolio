@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
+import type { MDXComponents } from "mdx/types";
+import remarkGfm from "remark-gfm";
+import rehypeSlug from "rehype-slug";
+import rehypePrettyCode from "rehype-pretty-code";
 import { getProjectBySlug, getProjectSlugs } from "@/lib/projects";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -126,7 +130,22 @@ export default async function ProjectPage({ params }: Props) {
       </div>
 
       <div className="prose prose-neutral dark:prose-invert max-w-none">
-        <MDXRemote source={project.content} />
+        <MDXRemote
+          source={project.content}
+          options={{
+            mdxOptions: {
+              remarkPlugins: [remarkGfm],
+              rehypePlugins: [rehypeSlug, rehypePrettyCode],
+            },
+          }}
+          components={
+            {
+              script: () => null,
+              iframe: () => null,
+              object: () => null,
+            } as MDXComponents
+          }
+        />
       </div>
 
       <ProjectJsonLd

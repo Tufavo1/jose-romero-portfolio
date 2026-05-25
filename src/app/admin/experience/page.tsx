@@ -15,20 +15,34 @@ export default function AdminExperiencePage() {
   const [education, setEducation] = useState<Education[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<number | null>(0);
 
   useEffect(() => {
-    fetch("/api/admin/experience")
-      .then((r) => r.json())
-      .then(setExperience);
-    fetch("/api/admin/education")
-      .then((r) => r.json())
-      .then(setEducation);
+    Promise.all([
+      fetch("/api/admin/experience").then((r) => {
+        if (!r.ok) throw new Error(`Error ${r.status}`);
+        return r.json() as Promise<Experience[]>;
+      }),
+      fetch("/api/admin/education").then((r) => {
+        if (!r.ok) throw new Error(`Error ${r.status}`);
+        return r.json() as Promise<Education[]>;
+      }),
+    ])
+      .then(([exp, edu]) => {
+        setExperience(exp);
+        setEducation(edu);
+      })
+      .catch((e: unknown) => {
+        setFetchError(e instanceof Error ? e.message : "Error al cargar datos");
+      });
   }, []);
 
   async function handleSave() {
     setSaving(true);
-    await Promise.all([
+    setSaveError(null);
+    const [res1, res2] = await Promise.all([
       adminFetch("/api/admin/experience", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -41,6 +55,12 @@ export default function AdminExperiencePage() {
       }),
     ]);
     setSaving(false);
+    if (!res1.ok || !res2.ok) {
+      const failed = !res1.ok ? res1 : res2;
+      const body = await failed.json().catch(() => ({}));
+      setSaveError((body as { error?: string }).error ?? "Error al guardar");
+      return;
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -105,6 +125,14 @@ export default function AdminExperiencePage() {
     );
   }
 
+  if (fetchError) {
+    return (
+      <div className="p-8 text-red-400">
+        Error al cargar datos: {fetchError}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl p-8">
       <div className="mb-6 flex items-center justify-between">
@@ -120,6 +148,12 @@ export default function AdminExperiencePage() {
           {saving ? "Guardando..." : saved ? "Guardado" : "Guardar"}
         </Button>
       </div>
+
+      {saveError && (
+        <p className="mb-4 rounded-md border border-red-800 bg-red-950 px-3 py-2 text-sm text-red-400">
+          {saveError}
+        </p>
+      )}
 
       <Tabs defaultValue="experience">
         <TabsList className="mb-6 border border-zinc-800 bg-zinc-900">

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { readAppearance, writeAppearance } from "@/lib/admin-data";
 import { profile } from "@/data/profile";
+import { validateCsrfRequest } from "@/lib/csrf";
+import { verifyAdminSession } from "@/lib/admin-auth";
+import { appearanceSchema } from "@/lib/validations";
 
 const DEFAULT_APPEARANCE = {
   navLinks: [
@@ -20,12 +23,30 @@ const DEFAULT_APPEARANCE = {
 };
 
 export async function GET() {
+  const authError = await verifyAdminSession();
+  if (authError) return authError;
+
   const data = (await readAppearance()) ?? DEFAULT_APPEARANCE;
   return NextResponse.json(data);
 }
 
 export async function PUT(request: Request) {
-  const body = await request.json();
-  await writeAppearance(body);
+  const csrfError = await validateCsrfRequest(request);
+  if (csrfError) return csrfError;
+  const authError = await verifyAdminSession();
+  if (authError) return authError;
+
+  const parsed = appearanceSchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        error: "Invalid data",
+        issues: parsed.error.flatten((i) => i.message).fieldErrors,
+      },
+      { status: 400 },
+    );
+  }
+
+  await writeAppearance(parsed.data);
   return NextResponse.json({ ok: true });
 }

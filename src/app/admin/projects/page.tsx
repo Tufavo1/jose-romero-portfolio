@@ -13,14 +13,22 @@ type ProjectItem = ProjectFrontmatter & { slug: string };
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [revision, setRevision] = useState(0);
 
   useEffect(() => {
     fetch("/api/admin/projects")
-      .then((r) => r.json())
-      .then((data: ProjectItem[]) => {
+      .then((r) => {
+        if (!r.ok) throw new Error(`Error ${r.status}`);
+        return r.json() as Promise<ProjectItem[]>;
+      })
+      .then((data) => {
         setProjects(data);
+        setLoading(false);
+      })
+      .catch((e: unknown) => {
+        setFetchError(e instanceof Error ? e.message : "Error al cargar");
         setLoading(false);
       });
   }, [revision]);
@@ -32,6 +40,12 @@ export default function AdminProjectsPage() {
   }
 
   if (loading) return <div className="p-8 text-zinc-400">Cargando...</div>;
+  if (fetchError)
+    return (
+      <div className="p-8 text-red-400">
+        Error al cargar proyectos: {fetchError}
+      </div>
+    );
 
   return (
     <div className="p-8">

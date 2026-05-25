@@ -44,6 +44,31 @@ function getLoginRatelimit(): Ratelimit | null {
   return loginRatelimit;
 }
 
+// In-memory fallback: enforces 5 attempts per 15 minutes per IP when Upstash is unavailable
+const IN_MEMORY_MAX = 5;
+const IN_MEMORY_WINDOW_MS = 15 * 60 * 1000;
+const inMemoryStore = new Map<string, { count: number; resetAt: number }>();
+
+function inMemoryLoginCheck(ip: string): {
+  success: boolean;
+  remaining: number;
+} {
+  const now = Date.now();
+  const entry = inMemoryStore.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    inMemoryStore.set(ip, { count: 1, resetAt: now + IN_MEMORY_WINDOW_MS });
+    return { success: true, remaining: IN_MEMORY_MAX - 1 };
+  }
+
+  if (entry.count >= IN_MEMORY_MAX) {
+    return { success: false, remaining: 0 };
+  }
+
+  entry.count++;
+  return { success: true, remaining: IN_MEMORY_MAX - entry.count };
+}
+
 export async function checkRateLimit(
   identifier: string,
 ): Promise<{ success: boolean; remaining: number }> {
@@ -57,7 +82,7 @@ export async function checkLoginRateLimit(
   identifier: string,
 ): Promise<{ success: boolean; remaining: number }> {
   const limiter = getLoginRatelimit();
-  if (!limiter) return { success: true, remaining: 99 };
+  if (!limiter) return inMemoryLoginCheck(identifier);
   const result = await limiter.limit(`login:${identifier}`);
   return { success: result.success, remaining: result.remaining };
 }

@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { generateCsrfToken } from "@/lib/csrf";
 import { checkLoginRateLimit } from "@/lib/rate-limit";
-
-function makeSessionToken(pw: string) {
-  return Buffer.from(pw + ":portfolio-admin").toString("base64");
-}
+import { makeSessionToken } from "@/lib/admin-auth";
 
 const COOKIE_OPTS = {
   secure: process.env.NODE_ENV === "production",
@@ -32,10 +29,10 @@ export async function POST(request: NextRequest) {
     password: string;
   };
 
-  const expectedEmail = process.env.ADMIN_EMAIL ?? "";
+  const expectedEmail = process.env.ADMIN_EMAIL;
   const expectedPassword = process.env.ADMIN_PASSWORD ?? "changeme";
 
-  const emailOk = expectedEmail === "" || email === expectedEmail;
+  const emailOk = !expectedEmail || email === expectedEmail;
   const passwordOk = password === expectedPassword;
 
   if (!emailOk || !passwordOk) {

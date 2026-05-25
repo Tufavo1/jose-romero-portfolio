@@ -1,7 +1,26 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
+async function makeSessionToken(password: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(password),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    enc.encode("admin-session-v1"),
+  );
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (!pathname.startsWith("/admin") && !pathname.startsWith("/api/admin")) {
@@ -14,11 +33,11 @@ export function middleware(request: NextRequest) {
 
   const session = request.cookies.get("admin_session")?.value;
   const pw = process.env.ADMIN_PASSWORD ?? "changeme";
-  const expected = btoa(pw + ":portfolio-admin");
+  const expected = await makeSessionToken(pw);
 
   if (session !== expected) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = "/admin/login";
     return NextResponse.redirect(url);
   }
 

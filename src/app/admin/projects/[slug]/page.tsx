@@ -57,10 +57,16 @@ export default function AdminProjectEditorPage({
   useEffect(() => {
     if (isNew) return;
     fetch(`/api/admin/projects/${slug}`)
-      .then((r) => r.json())
-      .then((d: ProjectData & { error?: string }) => {
+      .then((r) => {
+        if (!r.ok) throw new Error(`Error ${r.status}`);
+        return r.json() as Promise<ProjectData & { error?: string }>;
+      })
+      .then((d) => {
         if (d.error) router.push("/admin/projects");
         else setData(d);
+      })
+      .catch(() => {
+        router.push("/admin/projects");
       });
   }, [slug, isNew, router]);
 

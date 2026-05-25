@@ -12,6 +12,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
+      include: ["src/lib/**"],
       exclude: [
         "node_modules/",
         "tests/",
@@ -19,6 +20,10 @@ export default defineConfig({
         "src/app/**",
         "src/components/ui/**",
       ],
+      thresholds: {
+        branches: 50,
+        functions: 50,
+      },
     },
   },
   resolve: {

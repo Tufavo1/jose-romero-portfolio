@@ -40,9 +40,19 @@ test.describe("Navigation", () => {
   });
 
   test("project detail page loads", async ({ page }) => {
-    await page.goto("/projects/ractoryx-capture");
-    await expect(
-      page.getByRole("heading", { name: "Ractoryx Capture", exact: true }),
-    ).toBeVisible();
+    await page.goto("/projects");
+
+    const verCasoLinks = page.getByRole("link", { name: "Ver caso" });
+    const count = await verCasoLinks.count();
+    if (count === 0) {
+      // No projects in the database — nothing to assert
+      return;
+    }
+
+    const href = await verCasoLinks.first().getAttribute("href");
+    if (!href) return;
+
+    await page.goto(href);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 });

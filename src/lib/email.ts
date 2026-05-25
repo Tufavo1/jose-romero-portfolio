@@ -10,6 +10,15 @@ function getResend() {
   return resend;
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 export interface ContactEmailData {
   name: string;
   email: string;
@@ -23,17 +32,21 @@ export async function sendContactEmail(data: ContactEmailData) {
   const to = process.env.CONTACT_TO_EMAIL;
   if (!to) throw new Error("CONTACT_TO_EMAIL not set");
 
+  const name = escapeHtml(data.name);
+  const email = escapeHtml(data.email);
+  const message = escapeHtml(data.message).replace(/\n/g, "<br/>");
+
   return client.emails.send({
-    from: "Portfolio Contact <onboarding@resend.dev>",
+    from: process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev",
     to,
     subject: `Mensaje de ${data.name} — Portfolio`,
     text: `Nombre: ${data.name}\nEmail: ${data.email}\n\nMensaje:\n${data.message}`,
     html: `
-      <p><strong>Nombre:</strong> ${data.name}</p>
-      <p><strong>Email:</strong> ${data.email}</p>
+      <p><strong>Nombre:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
       <br/>
       <p><strong>Mensaje:</strong></p>
-      <p>${data.message.replace(/\n/g, "<br/>")}</p>
+      <p>${message}</p>
     `,
   });
 }

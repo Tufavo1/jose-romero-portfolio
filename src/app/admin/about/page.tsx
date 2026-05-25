@@ -26,24 +26,38 @@ export default function AdminAboutPage() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/about")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Error ${r.status}`);
+        return r.json();
+      })
       .then((d) => {
         setBio(d.bio || "");
         setSkills(d.skills || []);
+      })
+      .catch((e: unknown) => {
+        setFetchError(e instanceof Error ? e.message : "Error al cargar datos");
       });
   }, []);
 
   async function handleSave() {
     setSaving(true);
-    await adminFetch("/api/admin/about", {
+    setSaveError(null);
+    const res = await adminFetch("/api/admin/about", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bio, skills }),
     });
     setSaving(false);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setSaveError((body as { error?: string }).error ?? "Error al guardar");
+      return;
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -65,6 +79,14 @@ export default function AdminAboutPage() {
     );
   }
 
+  if (fetchError) {
+    return (
+      <div className="p-8 text-red-400">
+        Error al cargar datos: {fetchError}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl p-8">
       <div className="mb-6 flex items-center justify-between">
@@ -80,6 +102,12 @@ export default function AdminAboutPage() {
           {saving ? "Guardando..." : saved ? "Guardado" : "Guardar"}
         </Button>
       </div>
+
+      {saveError && (
+        <p className="mb-4 rounded-md border border-red-800 bg-red-950 px-3 py-2 text-sm text-red-400">
+          {saveError}
+        </p>
+      )}
 
       <div className="space-y-6">
         <div className="space-y-1.5">

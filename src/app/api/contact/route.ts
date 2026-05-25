@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { contactSchema } from "@/lib/validations";
 import { sendContactEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { readContactSettings } from "@/lib/admin-data";
 
 function stripHtml(str: string): string {
   return str.replace(/<[^>]*>/g, "");
@@ -9,6 +10,14 @@ function stripHtml(str: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const settings = await readContactSettings();
+    if (!settings.form_enabled) {
+      return NextResponse.json(
+        { error: "El formulario de contacto está desactivado." },
+        { status: 403 },
+      );
+    }
+
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous";
 
@@ -30,7 +39,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: "Datos inválidos",
-          issues: parsed.error.flatten().fieldErrors,
+          issues: parsed.error.flatten((i) => i.message).fieldErrors,
         },
         { status: 400 },
       );
@@ -41,6 +50,13 @@ export async function POST(req: NextRequest) {
       name: stripHtml(parsed.data.name),
       message: stripHtml(parsed.data.message),
     };
+
+    if (!process.env.RESEND_API_KEY) {
+      return NextResponse.json(
+        { error: "Contact form unavailable" },
+        { status: 503 },
+      );
+    }
 
     await sendContactEmail(sanitized);
 

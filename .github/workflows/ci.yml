@@ -118,7 +118,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nextjs-build-${{ github.sha }}
+          name: nextjs-build-${{ github.run_id }}
           path: |
             .next/
             !.next/cache
@@ -154,7 +154,7 @@ jobs:
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: nextjs-build-${{ github.sha }}
+          name: nextjs-build-${{ github.run_id }}
           path: .next/
 
       - name: Cache Playwright browsers
@@ -181,7 +181,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-${{ matrix.project }}-${{ github.sha }}
+          name: playwright-report-${{ matrix.project }}-${{ github.run_id }}
           path: playwright-report/
           retention-days: 7
 

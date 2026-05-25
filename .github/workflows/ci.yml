@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "pnpm"
 
       - name: Install dependencies
@@ -55,7 +55,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "pnpm"
 
       - name: Install dependencies
@@ -64,8 +64,8 @@ jobs:
       - name: Build
         run: pnpm build
         env:
-          NEXT_PUBLIC_SITE_URL: https://joseromero.dev
-          NEXT_PUBLIC_GITHUB_USERNAME: tuusuario
+          NEXT_PUBLIC_SITE_URL: https://jose-romero-portfolio.vercel.app
+          NEXT_PUBLIC_GITHUB_USERNAME: Tufavo1
 
   e2e:
     name: E2E tests
@@ -84,7 +84,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "pnpm"
 
       - name: Install dependencies
@@ -96,8 +96,8 @@ jobs:
       - name: Build
         run: pnpm build
         env:
-          NEXT_PUBLIC_SITE_URL: https://joseromero.dev
-          NEXT_PUBLIC_GITHUB_USERNAME: tuusuario
+          NEXT_PUBLIC_SITE_URL: https://jose-romero-portfolio.vercel.app
+          NEXT_PUBLIC_GITHUB_USERNAME: Tufavo1
 
       - name: Run E2E tests
         run: pnpm test:e2e

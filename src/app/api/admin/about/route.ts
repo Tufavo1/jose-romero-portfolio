@@ -1,25 +1,26 @@
 import { NextResponse } from "next/server";
-import { readOverride, writeOverride } from "@/lib/admin-data";
-import { validateCsrfRequest } from "@/lib/csrf";
+import {
+  readProfile,
+  writeProfile,
+  readSkills,
+  writeSkills,
+} from "@/lib/admin-data";
 import { profile } from "@/data/profile";
-import { skills } from "@/data/skills";
+import { skills as defaultSkills } from "@/data/skills";
 
 export async function GET() {
-  const profileData = readOverride("profile", profile);
-  const skillsData = readOverride("skills", skills);
-  return NextResponse.json({ bio: profileData.shortBio, skills: skillsData });
+  const profileData = (await readProfile()) ?? profile;
+  const skillsData = await readSkills();
+  return NextResponse.json({
+    bio: profileData.shortBio,
+    skills: skillsData.length > 0 ? skillsData : defaultSkills,
+  });
 }
 
 export async function PUT(request: Request) {
-  const csrf = await validateCsrfRequest(request);
-  if (csrf) return csrf;
-
-  const { bio, skills: updatedSkills } = (await request.json()) as {
-    bio: string;
-    skills: unknown;
-  };
-  const profileData = readOverride("profile", profile);
-  writeOverride("profile", { ...profileData, shortBio: bio });
-  writeOverride("skills", updatedSkills);
+  const { bio, skills } = await request.json();
+  const profileData = (await readProfile()) ?? profile;
+  await writeProfile({ ...profileData, shortBio: bio });
+  await writeSkills(skills);
   return NextResponse.json({ ok: true });
 }

@@ -15,11 +15,13 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "analyze": "ANALYZE=true next build"
+    "analyze": "ANALYZE=true next build",
+    "seed": "dotenv -e .env.local -- tsx scripts/seed-supabase.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
     "@octokit/rest": "^22.0.1",
+    "@supabase/supabase-js": "^2.106.1",
     "@tailwindcss/typography": "^0.5.19",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
@@ -70,6 +72,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.4",
     "eslint-config-next": "16.2.6",
     "globals": "^17.6.0",
@@ -79,6 +82,7 @@
     "prettier": "3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4.3.0",
+    "tsx": "^4.22.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.4",
     "vitest": "^4.1.7"

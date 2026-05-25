@@ -4,8 +4,8 @@ import { ProjectCard } from "@/components/project/project-card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
-export function FeaturedProjects() {
-  const projects = getFeaturedProjects();
+export async function FeaturedProjects() {
+  const projects = await getFeaturedProjects();
 
   return (
     <section className="py-16">

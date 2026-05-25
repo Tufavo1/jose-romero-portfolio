@@ -1,10 +1,12 @@
 import type { MetadataRoute } from "next";
 import { getAllProjects } from "@/lib/projects";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://joseromero.dev";
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  "https://jose-romero-portfolio.vercel.app";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const projects = getAllProjects();
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const projects = await getAllProjects();
 
   const projectRoutes = projects.map((project) => ({
     url: `${siteUrl}${project.url}`,

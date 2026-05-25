@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
-import { getAllProjects, getProjectBySlug } from "@/lib/projects";
+import { getProjectBySlug, getProjectSlugs } from "@/lib/projects";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
@@ -10,41 +10,49 @@ import { buildMetadata } from "@/lib/seo";
 import { ProjectJsonLd } from "@/components/shared/json-ld";
 
 interface Props {
-  params: Promise<{ slug: string }>;
+  params: {
+    slug: string;
+  };
 }
 
 export async function generateStaticParams() {
-  return getAllProjects().map((p) => ({ slug: p.slug }));
+  const slugs = await getProjectSlugs();
+
+  return slugs.map((slug) => ({
+    slug,
+  }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug } = params;
 
-  let project;
   try {
-    project = getProjectBySlug(slug);
+    const project = await getProjectBySlug(slug);
+
+    return buildMetadata({
+      title: project.title,
+      description: project.description,
+      path: `/projects/${slug}`,
+    });
   } catch {
     return {};
   }
-
-  return buildMetadata({
-    title: project.title,
-    description: project.description,
-    path: `/projects/${slug}`,
-  });
 }
 
 export default async function ProjectPage({ params }: Props) {
-  const { slug } = await params;
+  const { slug } = params;
 
   let project;
+
   try {
-    project = getProjectBySlug(slug);
+    project = await getProjectBySlug(slug);
   } catch {
     notFound();
   }
 
-  if (!project) notFound();
+  if (!project) {
+    notFound();
+  }
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-16">
@@ -82,7 +90,7 @@ export default async function ProjectPage({ params }: Props) {
         <p className="text-muted-foreground text-lg">{project.description}</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          {project.tags.map((tag) => (
+          {project.tags.map((tag: string) => (
             <Badge key={tag} variant="outline" className="text-xs font-normal">
               {tag}
             </Badge>

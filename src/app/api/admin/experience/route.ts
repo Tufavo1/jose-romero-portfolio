@@ -1,18 +1,14 @@
 import { NextResponse } from "next/server";
-import { readOverride, writeOverride } from "@/lib/admin-data";
-import { validateCsrfRequest } from "@/lib/csrf";
-import { experience } from "@/data/experience";
+import { readExperience, writeExperience } from "@/lib/admin-data";
+import { experience as defaultExperience } from "@/data/experience";
 
 export async function GET() {
-  const data = readOverride("experience", experience);
-  return NextResponse.json(data);
+  const data = await readExperience();
+  return NextResponse.json(data.length > 0 ? data : defaultExperience);
 }
 
 export async function PUT(request: Request) {
-  const csrf = await validateCsrfRequest(request);
-  if (csrf) return csrf;
-
   const body = await request.json();
-  writeOverride("experience", body);
+  await writeExperience(body);
   return NextResponse.json({ ok: true });
 }

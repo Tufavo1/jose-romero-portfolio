@@ -1,38 +1,63 @@
-import fs from "fs";
-import path from "path";
-import matter from "gray-matter";
+import { supabase } from "@/lib/supabase";
 import type { Project, ProjectFrontmatter } from "@/types/project";
 
-const PROJECTS_DIR = path.join(process.cwd(), "src/content/projects");
-
-export function getProjectSlugs(): string[] {
-  if (!fs.existsSync(PROJECTS_DIR)) return [];
-  return fs
-    .readdirSync(PROJECTS_DIR)
-    .filter((f) => f.endsWith(".mdx"))
-    .map((f) => f.replace(".mdx", ""));
+export async function getProjectSlugs(): Promise<string[]> {
+  const { data } = await supabase
+    .from("projects")
+    .select("slug")
+    .order("updated_at", { ascending: false });
+  return data?.map((r) => r.slug) ?? [];
 }
 
-export function getProjectBySlug(slug: string): Project & { content: string } {
-  const filePath = path.join(PROJECTS_DIR, `${slug}.mdx`);
-  const raw = fs.readFileSync(filePath, "utf-8");
-  const { data, content } = matter(raw);
-  const frontmatter = data as ProjectFrontmatter;
+export async function getProjectBySlug(
+  slug: string,
+): Promise<Project & { content: string }> {
+  const { data } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("slug", slug)
+    .single();
 
+  if (!data) throw new Error(`Project not found: ${slug}`);
+
+  const frontmatter = data.frontmatter as ProjectFrontmatter;
   return {
     ...frontmatter,
-    slug,
-    url: `/projects/${slug}`,
-    content,
+    slug: data.slug,
+    url: `/projects/${data.slug}`,
+    content: data.content,
   };
 }
 
-export function getAllProjects(): Project[] {
-  return getProjectSlugs()
-    .map((slug) => getProjectBySlug(slug))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+export async function getAllProjects(): Promise<Project[]> {
+  const { data } = await supabase
+    .from("projects")
+    .select("slug, frontmatter, updated_at")
+    .order("updated_at", { ascending: false });
+
+  return (data ?? []).map((r) => {
+    const frontmatter = r.frontmatter as ProjectFrontmatter;
+    return {
+      ...frontmatter,
+      slug: r.slug,
+      url: `/projects/${r.slug}`,
+    };
+  });
 }
 
-export function getFeaturedProjects(): Project[] {
-  return getAllProjects().filter((p) => p.featured);
+export async function getFeaturedProjects(): Promise<Project[]> {
+  const { data } = await supabase
+    .from("projects")
+    .select("slug, frontmatter, updated_at")
+    .eq("frontmatter->>featured", "true")
+    .order("updated_at", { ascending: false });
+
+  return (data ?? []).map((r) => {
+    const frontmatter = r.frontmatter as ProjectFrontmatter;
+    return {
+      ...frontmatter,
+      slug: r.slug,
+      url: `/projects/${r.slug}`,
+    };
+  });
 }

@@ -1,18 +1,14 @@
 import { NextResponse } from "next/server";
-import { readOverride, writeOverride } from "@/lib/admin-data";
-import { validateCsrfRequest } from "@/lib/csrf";
+import { readProfile, writeProfile } from "@/lib/admin-data";
 import { profile } from "@/data/profile";
 
 export async function GET() {
-  const data = readOverride("profile", profile);
+  const data = (await readProfile()) ?? profile;
   return NextResponse.json(data);
 }
 
 export async function PUT(request: Request) {
-  const csrf = await validateCsrfRequest(request);
-  if (csrf) return csrf;
-
   const body = await request.json();
-  writeOverride("profile", body);
+  await writeProfile(body);
   return NextResponse.json({ ok: true });
 }

@@ -1,7 +1,7 @@
 import { getAllProjects } from "@/lib/projects";
 import { ProjectCard } from "@/components/project/project-card";
-import type { Metadata } from "next";
 import { buildMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = buildMetadata({
   title: "Proyectos",
@@ -9,8 +9,11 @@ export const metadata: Metadata = buildMetadata({
     "Proyectos de Jose Romero — SaaS empresariales, automatización y desarrollo web moderno.",
   path: "/projects",
 });
-export default function ProjectsPage() {
-  const projects = getAllProjects();
+
+export const revalidate = 60;
+
+export default async function ProjectsPage() {
+  const projects = await getAllProjects();
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-16">

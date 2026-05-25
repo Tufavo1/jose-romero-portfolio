@@ -90,7 +90,7 @@ src/
 Requisitos: Node.js 20+ y pnpm.
 
 ```bash
-git clone https://github.com/Tufavo1/
+git clone https://github.com/Tufavo1/](https://github.com/Tufavo1/jose-romero-portfolio.git
 cd portafolio
 pnpm install
 cp .env.example .env.local

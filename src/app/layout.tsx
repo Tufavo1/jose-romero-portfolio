@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
+import { SiteChrome } from "@/components/layout/site-chrome";
 import { Toaster } from "@/components/ui/sonner";
 import { profile } from "@/data/profile";
 import { PersonJsonLd } from "@/components/shared/json-ld";
@@ -46,13 +45,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <a
-          href="#main-content"
-          className="focus:bg-background sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:border focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
-        >
-          Saltar al contenido
-        </a>
-
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -60,12 +52,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           disableTransitionOnChange
         >
           <PersonJsonLd />
-
-          <Header />
-
-          <main id="main-content">{children}</main>
-
-          <Footer />
+          <SiteChrome>{children}</SiteChrome>
           <Toaster />
         </ThemeProvider>
       </body>

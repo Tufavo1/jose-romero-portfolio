@@ -3,6 +3,10 @@ import { contactSchema } from "@/lib/validations";
 import { sendContactEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
 
+function stripHtml(str: string): string {
+  return str.replace(/<[^>]*>/g, "");
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ip =
@@ -32,7 +36,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await sendContactEmail(parsed.data);
+    const sanitized = {
+      ...parsed.data,
+      name: stripHtml(parsed.data.name),
+      message: stripHtml(parsed.data.message),
+    };
+
+    await sendContactEmail(sanitized);
 
     return NextResponse.json({ success: true });
   } catch (error) {

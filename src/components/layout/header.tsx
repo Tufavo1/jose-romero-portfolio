@@ -61,6 +61,9 @@ export function Header() {
               CV
             </a>
           </Button>
+          <Button asChild size="sm" variant="ghost" className="hidden md:flex">
+            <Link href="/login">Iniciar sesión</Link>
+          </Button>
         </div>
       </div>
     </header>

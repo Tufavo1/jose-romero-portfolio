@@ -1,6 +1,100 @@
 # Jose Romero — Portfolio
 
-Mi portfolio personal. Lo construí desde cero porque quería algo que reflejara cómo pienso, cómo trabajo y qué tipo de proyectos hago - no una plantilla genérica.
+Mi portfolio personal de ingeniería de software. Construido desde cero con Next.js 16, TypeScript estricto y un stack moderno orientado a calidad, seguridad y mantenibilidad.
+
+🔗 [jose-romero-portfolio.vercel.app](https://jose-romero-portfolio.vercel.app)
+
+---
+
+## Estado del proyecto
+
+```
+✅ Completado     🔧 En progreso     📋 Planificado
+```
+
+| Área                              | Estado | Notas                                                         |
+| --------------------------------- | ------ | ------------------------------------------------------------- |
+| Fundación y arquitectura          | ✅     | Next.js 16, TS strict, Tailwind v4                            |
+| Modelo de contenido MDX           | ✅     | next-mdx-remote + gray-matter                                 |
+| Páginas principales               | ✅     | Home, Proyectos, Experiencia, About, Contacto                 |
+| Integraciones backend             | ✅     | Resend, Upstash Redis, GitHub API                             |
+| SEO completo                      | ✅     | Metadata, OG images, sitemap, JSON-LD                         |
+| Unit tests (Vitest)               | ✅     | 14 tests pasando                                              |
+| E2E tests (Playwright)            | ✅     | 20 tests pasando                                              |
+| Deploy en Vercel                  | ✅     | CI/CD con GitHub Actions                                      |
+| Accesibilidad básica              | ✅     | axe-core, skip to content, ARIA                               |
+| Rate limiting formulario          | ✅     | 3 req/hora por IP con Upstash                                 |
+| Validación de inputs              | ✅     | Zod en cliente y servidor                                     |
+| Proxy de API                      | 🔧     | GitHub API necesita proxy con caché adecuado                  |
+| Protección CSRF                   | 🔧     | Pendiente en endpoints de formulario                          |
+| Dominio custom                    | 📋     | Reemplazar `.vercel.app` por dominio propio                   |
+| Panel de administración           | 📋     | Interfaz para gestionar proyectos sin tocar código            |
+| Integración con Supabase          | 📋     | Backend del panel admin — proyectos, imágenes                 |
+| Mejoras de diseño                 | 📋     | Animaciones, micro-interacciones, layout refinado             |
+| Mejoras en formulario de contacto | 📋     | Honeypot, mejor UX de errores, confirmación visual            |
+| Screenshots reales de proyectos   | 📋     | Imágenes reales para Ractoryx Capture y Maintenance Scheduler |
+| CV en PDF                         | 📋     | Subir versión actualizada a `/public/resume/`                 |
+
+---
+
+## Arquitectura
+
+```
+┌─────────────────────────────────────────────────────┐
+│                     Cliente                          │
+│   Next.js 16 App Router (React 19 + Turbopack)      │
+│   Tailwind CSS v4 · shadcn/ui · Framer Motion       │
+└──────────────────┬──────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────┐
+│                  API Routes (Server)                  │
+│                                                      │
+│   /api/contact ──► Zod validation                   │
+│                     └► Upstash rate limit            │
+│                         └► Resend email              │
+│                                                      │
+│   /api/github  ──► GitHub REST API (caché 1h)       │
+└──────────────────┬──────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────┐
+│               Contenido y Datos                      │
+│                                                      │
+│   src/data/*.ts     ← fuente de verdad tipada       │
+│   src/content/*.mdx ← casos de estudio              │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## Roadmap detallado
+
+### Proxy de API
+
+La integración con GitHub API actualmente hace requests directos desde el servidor. El objetivo es añadir un proxy con caché persistente para evitar rate limiting en producción y reducir latencia.
+
+### Protección CSRF
+
+Los endpoints de formulario necesitan tokens CSRF para prevenir ataques de cross-site request forgery. La implementación planificada usa tokens firmados por sesión validados en el servidor antes de procesar cualquier input.
+
+### Panel de administración
+
+Interfaz visual conectada a Supabase que permita:
+
+- Agregar, editar y eliminar proyectos sin tocar código
+- Subir imágenes directamente desde el panel
+- Gestionar links de GitHub y live URL por proyecto
+- Autenticación con Supabase Auth
+
+### Dominio custom
+
+Migrar de `jose-romero-portfolio.vercel.app` a un dominio propio. Actualización de `NEXT_PUBLIC_SITE_URL`, sitemap y Search Console.
+
+### Mejoras de seguridad pendientes
+
+- Tokens CSRF en formulario de contacto
+- Sanitización de inputs contra XSS antes del procesamiento
+- Content Security Policy (CSP) headers configurados explícitamente
+- Revisión de dependencias con `pnpm audit` en CI
 
 ---
 
@@ -9,63 +103,60 @@ Mi portfolio personal. Lo construí desde cero porque quería algo que reflejara
 ### Frontend
 
 - Next.js 16 (App Router + Turbopack)
-- React 19
-- TypeScript (Strict Mode)
-- Tailwind CSS v4
-- shadcn/ui + Radix UI
+- React 19 · TypeScript (Strict Mode)
+- Tailwind CSS v4 · shadcn/ui + Radix UI
 - Framer Motion
 
 ### Contenido
 
-- MDX para casos de estudio
-- next-mdx-remote + gray-matter
+- MDX · next-mdx-remote · gray-matter
 
 ### Backend e infraestructura
 
-- Resend — emails del formulario de contacto
+- Resend — emails
 - Upstash Redis — rate limiting
 - GitHub API — actividad en tiempo real
+- Supabase — próximamente (panel admin)
 
-### Calidad
+### Calidad y seguridad
 
 - ESLint + Prettier + Husky + lint-staged
 - Vitest — unit tests
 - Playwright — E2E tests
+- axe-core — accesibilidad
+- Zod — validación de esquemas
 
 ---
 
-## Seguridad
-
-Este proyecto aplica varias capas de seguridad:
+## Seguridad implementada
 
 **Variables de entorno**
-Todas las credenciales y configuraciones sensibles viven en `.env.local`, que está excluido del repositorio. El archivo `.env.example` documenta las variables necesarias sin exponer valores reales.
+Credenciales en `.env.local`, excluido del repo. `.env.example` documenta las variables sin exponer valores.
 
 **Rate limiting**
-El endpoint del formulario de contacto (`/api/contact`) tiene rate limiting por IP con Upstash Redis — máximo 3 solicitudes por hora. Esto previene spam y abuso del servicio de email.
+`/api/contact` limita a 3 requests por hora por IP con Upstash Redis.
 
 **Validación de inputs**
-Todos los datos del formulario se validan con Zod tanto en el cliente (react-hook-form) como en el servidor (API route) antes de procesarse. No se procesa ningún input sin validación previa.
+Zod valida todos los datos del formulario en cliente y servidor. Ningún input se procesa sin validación previa.
 
 **Headers de seguridad**
-Next.js aplica headers de seguridad por defecto en producción. En Vercel se activan automáticamente headers como `X-Content-Type-Options`, `X-Frame-Options` y `Referrer-Policy`.
+Vercel activa automáticamente `X-Content-Type-Options`, `X-Frame-Options` y `Referrer-Policy` en producción.
 
 **API routes protegidas**
-Los endpoints de API no exponen variables de entorno al cliente. El token de GitHub y las credenciales de Resend/Upstash solo existen en el servidor.
+Tokens de GitHub, Resend y Upstash solo existen en el servidor. Nunca se exponen al cliente.
+
+**Pendiente**
+CSRF tokens, CSP headers explícitos, sanitización XSS.
 
 ---
 
 ## Entornos
 
-El proyecto distingue entre tres entornos:
-
-| Entorno       | Descripción                                          |
-| ------------- | ---------------------------------------------------- |
-| `development` | `pnpm dev` — Turbopack, hot reload, sin analytics    |
-| `preview`     | PRs en Vercel — URL de preview automática por branch |
-| `production`  | `main` → Vercel — dominio custom, analytics activos  |
-
-Las variables de entorno se configuran por separado en cada entorno desde el dashboard de Vercel. Nunca se comparte `.env.local` entre entornos.
+| Entorno       | Descripción                                       |
+| ------------- | ------------------------------------------------- |
+| `development` | `pnpm dev` — Turbopack, hot reload, sin analytics |
+| `preview`     | PRs → URL de preview automática en Vercel         |
+| `production`  | `main` → Vercel — analytics activos               |
 
 ---
 
@@ -81,51 +172,42 @@ src/
 ├── hooks/         # Custom React hooks
 ├── styles/        # Estilos globales
 └── types/         # Tipos compartidos de TypeScript
+
+tests/
+├── unit/          # Vitest — utils, data, validaciones
+└── e2e/           # Playwright — navegación, formulario, accesibilidad
 ```
 
 ---
 
-## Instalación
+## Instalación local
 
-Requisitos: Node.js 20+ y pnpm.
+Requisitos: Node.js 22+ y pnpm.
 
 ```bash
-git clone https://github.com/Tufavo1/](https://github.com/Tufavo1/jose-romero-portfolio.git
-cd portafolio
+git clone https://github.com/Tufavo1/jose-romero-portfolio.git
+cd jose-romero-portfolio
 pnpm install
 cp .env.example .env.local
 ```
 
-Completa `.env.local` con tus credenciales y luego:
+Completa `.env.local` con tus credenciales:
+
+```bash
+RESEND_API_KEY=
+CONTACT_TO_EMAIL=
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+GITHUB_TOKEN=
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_GITHUB_USERNAME=Tufavo1
+```
 
 ```bash
 pnpm dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000).
-
----
-
-## Variables de entorno
-
-```bash
-# Email (Resend)
-RESEND_API_KEY=
-CONTACT_TO_EMAIL=
-
-# Rate limiting (Upstash)
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
-
-# GitHub API
-GITHUB_TOKEN=
-
-# Sitio
-NEXT_PUBLIC_SITE_URL=
-NEXT_PUBLIC_GITHUB_USERNAME=
-```
-
-Sin estas variables el sitio funciona igual — el formulario de contacto y los stats de GitHub simplemente no van a operar en desarrollo local.
+Sin las variables el sitio funciona — el formulario y los stats de GitHub no van a operar.
 
 ---
 
@@ -137,7 +219,7 @@ pnpm build          # Build de producción
 pnpm start          # Servidor de producción
 pnpm lint           # ESLint
 pnpm type-check     # TypeScript sin emitir
-pnpm format         # Prettier en todo el proyecto
+pnpm format         # Prettier
 pnpm test           # Unit tests con Vitest
 pnpm test:e2e       # E2E con Playwright
 pnpm test:coverage  # Coverage report
@@ -149,25 +231,16 @@ pnpm analyze        # Bundle analyzer
 ## Decisiones técnicas
 
 **¿Por qué MDX para los proyectos?**
-Quería casos de estudio reales — con contexto, decisiones de arquitectura y trade-offs — no solo tarjetas estáticas. MDX da formato rico con control total y sin depender de un CMS externo.
+Quería casos de estudio reales con contexto, decisiones de arquitectura y trade-offs — no tarjetas estáticas. MDX da formato rico sin depender de un CMS.
 
 **¿Por qué archivos TypeScript para los datos?**
-Un CMS sería overkill para un portfolio personal. Los archivos `.ts` son type-safe, refactorizables y si algo se rompe, el build falla antes de llegar a producción.
+Un CMS sería overkill. Los `.ts` son type-safe, refactorizables, y si algo se rompe el build falla antes de llegar a producción.
 
 **¿Por qué no Contentlayer?**
-Contentlayer2 tiene incompatibilidades conocidas con Next.js 16 y Turbopack. Migré a `next-mdx-remote` + `gray-matter` que funciona perfectamente con el stack actual.
+Incompatibilidades conocidas con Next.js 16 y Turbopack. Migré a `next-mdx-remote` + `gray-matter`.
 
----
-
-## Deploy
-
-Plataforma: Vercel.
-
-El flujo es:
-
-1. Push a `main` → deploy automático a producción
-2. Pull requests → preview URL automática
-3. GitHub Actions corre typecheck, lint, unit tests y E2E antes de cada merge
+**¿Por qué Supabase para el panel admin?**
+Ya lo uso en otros proyectos. Auth integrado, storage para imágenes, y Postgres como base de datos — todo en un solo servicio sin infraestructura adicional.
 
 ---
 
